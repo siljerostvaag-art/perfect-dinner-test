@@ -18,13 +18,16 @@ Prøv gjerne dette uten å få forklaring underveis:
 5. Sjekk at Mitt kjøkken viser den nye mengden.
 6. Bytt språk og se om du fortsatt finner fram.
 7. Prøv et oppdiktet allergivalg og en egen allergi under Mine valg. Se hvilke forslag som holdes tilbake.
+8. Legg inn en vare og kryss av «Har – uten mengde» hvis du ikke vil telle den. Merk en vare som «Ligger i fryseren», for eksempel laks, og planlegg en middag som bruker den. Se om appen minner deg på å tine den.
+9. Åpne en rett og trykk «Dropp denne» på en ingrediens du vil klare deg uten.
 
-Gi tilbakemelding til den som inviterte deg: Hva var uklart? Hvor stoppet du opp? Hva ville du brukt i hverdagen? Oppgi gjerne telefon/nettleser og hvilke steg du tok ved en feil. Du trenger ikke sende personopplysninger, allergier eller bilder av private data.
+Gi tilbakemelding underveis med knappen «Tilbakemelding» (snakkeboblen) øverst i appen. Du velger selv om du sender med SMS, e-post eller annet. Du kan også gi tilbakemelding direkte til den som inviterte deg: Hva var uklart? Hvor stoppet du opp? Hva ville du brukt i hverdagen? Oppgi gjerne telefon/nettleser og hvilke steg du tok ved en feil. Du trenger ikke sende personopplysninger, allergier eller bilder av private data.
 
 Vi vil også gjerne vite:
 - Var det lett å finne hvor du legger inn allergier?
 - Var noe tungvint da du la inn maten du har hjemme?
 - Så du med en gang hva appen foreslo til middag, eller måtte du lete?
+- Hvordan vil du helst bruke appen: planlegge uka på forhånd, eller finne ut hva du skal lage samme dag ut fra det du har? Hva savnet du for å gjøre det på din måte?
 
 OM DEMOEN
 Ingen konto eller betaling. Du starter med et eksempelkjøkken og kan endre eller tømme det. Valgene lagres lokalt når nettleseren tillater det; de sendes ikke automatisk til den som tester appen med deg. «Demo» i appen lar deg nullstille valgene.
@@ -34,6 +37,6 @@ Nettsøk sender søkeordet til TheMealDB. Tjenesten og eksterne oppskriftsnettst
 ENGLISH
 Unzip this folder and open index.html in a desktop browser, or use the test link from your host. On a phone, use a browser link; email/file previews may not run the app. Select English at the top.
 To get it as an app: on iPhone, open the link in Safari, tap Share and choose "Add to Home Screen". On Android, open it in Chrome, tap the menu (three dots) and choose "Install app" or "Add to Home screen". Then always open it from the icon; data entered in the browser may not carry over.
-Try adding ingredients and quantities, finding a dinner with a substitute, planning selected days, and recording a shopping purchase. Check that My kitchen updates. Tell your host where you got stuck and what you would use in everyday life.
-We would also like to know: Was it easy to find where to enter allergies? Was anything tedious when adding the food you have at home? Did you see the dinner suggestion right away, or did you have to look for it?
+Try adding ingredients and quantities (or “no amount”), marking an item as in the freezer, skipping an ingredient in a dish, finding a dinner with a substitute, planning selected days, and recording a shopping purchase. Check that My kitchen updates. Use the Feedback button (speech bubble) at the top to send comments as you go, or tell your host where you got stuck and what you would use in everyday life.
+We would also like to know: Was it easy to find where to enter allergies? Was anything tedious when adding the food you have at home? Did you see the dinner suggestion right away, or did you have to look for it? Would you rather plan the week ahead, or decide on the day based on what you have? What was missing for doing it your way?
 This is a demo with example data and no payment. Choices stay in your browser when storage is available. Amounts and swaps are examples; check the source recipe before shopping or cooking. Preferences are not an allergy check. The separate allergy filter includes 14 allergen groups and a field for other allergies. It withholds recipes when a selected allergen is found or information is uncertain. It cannot check actual products, traces or cross-contact. Do not rely on the demo for food allergy safety. Food images are AI illustrations. Online searches send the search term to TheMealDB and require internet. Read Privacy and storage in the app. Feedback is not sent automatically.
