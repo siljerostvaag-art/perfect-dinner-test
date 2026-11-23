@@ -14,7 +14,7 @@ Prøv gjerne dette uten å få forklaring underveis:
 1. Legg inn tre ingredienser og hvor mye du har.
 2. Finn en middag. Se om et bytteforslag hjelper når noe mangler.
 3. Planlegg én dag, og deretter noen dager eller en hel uke.
-4. Åpne handlelisten. Registrer en vare som kjøpt og legg inn mengden.
+4. Åpne handlelisten. Trykk på ruten ved en vare du har kjøpt. Prøv også «Kjøpte en annen mengde», «Kjøpte alt på listen» og «Del liste».
 5. Sjekk at Mitt kjøkken viser den nye mengden.
 6. Bytt språk og se om du fortsatt finner fram.
 7. Prøv et oppdiktet allergivalg og en egen allergi under Mine valg. Se hvilke forslag som holdes tilbake.

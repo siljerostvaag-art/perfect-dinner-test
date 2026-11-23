@@ -139,7 +139,7 @@ try{const current=localStorage.getItem(STORE);loadedV2=!!current;const raw=JSON.
 // B-036: byttet for olivenolje er nå solsikkeolje (kjent uten allergener). Et lagret valg av det gamle byttet følger med.
 for(const s of Object.values(state.swaps))if(s&&typeof s==='object'&&!Array.isArray(s)&&Array.isArray(s.olivenolje)&&s.olivenolje.length===1&&s.olivenolje[0]==='olje')s.olivenolje=['solsikkeolje']}}
 catch{storageOK=false;loadedV2=false}
-try{const saved=JSON.parse(localStorage.getItem(STORE)||'null');if(Array.isArray(saved?.shoppingLog))state.shoppingLog=saved.shoppingLog.filter(r=>r&&typeof r.id==='string'&&typeof r.name==='string'&&['bought','home'].includes(r.mode)&&Number.isFinite(r.amount)&&r.amount>=0&&['stk','g','kg','ml','dl','l'].includes(r.unit)&&/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&(r.total===null||Number.isFinite(r.total))).slice(-50);const undo=saved?.shoppingUndo;if(undo&&typeof undo.id==='string'&&typeof undo.name==='string'&&typeof undo.stamp==='string'&&typeof undo.before?.present==='boolean'&&(undo.before.stock===null||typeof undo.before.stock==='object')&&state.shoppingLog.some(r=>r.id===undo.id))state.shoppingUndo=undo}catch{}
+try{const saved=JSON.parse(localStorage.getItem(STORE)||'null');if(Array.isArray(saved?.shoppingLog))state.shoppingLog=saved.shoppingLog.filter(r=>r&&typeof r.id==='string'&&typeof r.name==='string'&&['bought','home'].includes(r.mode)&&((Number.isFinite(r.amount)&&r.amount>=0)||(r.amount===null&&r.noAmount===true))&&['stk','g','kg','ml','dl','l'].includes(r.unit)&&/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&(r.total===null||Number.isFinite(r.total))).slice(-50);const undo=saved?.shoppingUndo;if(undo&&typeof undo.id==='string'&&typeof undo.name==='string'&&typeof undo.stamp==='string'&&typeof undo.before?.present==='boolean'&&(undo.before.stock===null||typeof undo.before.stock==='object')&&(undo.entries===undefined||(Array.isArray(undo.entries)&&undo.entries.every(e=>e&&typeof e.id==='string'&&typeof e.name==='string'&&typeof e.before?.present==='boolean'&&(e.before.stock===null||typeof e.before.stock==='object'))))&&state.shoppingLog.some(r=>r.id===undo.id))state.shoppingUndo=undo}catch{}
 let page='home',filter='all',planMode='one',weekOffset=0,searchMessage='',onlineBusy=false,searchResultIds=[],selectedDates=new Set(),dialogRecipe=null,addWeekOffset=0;
 const today=new Date();today.setHours(12,0,0,0);
 const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -522,10 +522,10 @@ function shopping(){
  <div class="shopping-guide"><b>Trykk på ruten når du har kjøpt en vare.</b><p>Varen legges rett inn i «Mitt kjøkken» med mengden på listen. Kjøpte du noe annet enn det som står, trykker du «Kjøpte en annen mengde».</p></div>
  ${report.invalidLeftovers.length?'<p class="preference-warning">Et restemåltid mangler gyldig kobling. Åpne matplanen og rett det før du handler.</p>':''}
  ${items.length?`<div class="list-toolbar"><p role="status">${items.length} ${items.length===1?'vare gjenstår':'varer gjenstår'}</p><div class="list-actions"><button class="primary" data-action="share-list">${icon('share')} Del liste</button><button class="secondary" data-action="copy-list">${icon('copy')} Kopier liste</button></div></div>
- <div class="shopping-pending">${items.map(i=>`<article class="shopping-item shopping-row"><label class="shopping-check"><input type="checkbox" data-shopping-check="${esc(i.key)}" aria-label="Kjøpt ${esc(i.name)}"><span>Kjøpt</span></label><div class="shopping-info"><b>${esc(pretty(i.name))}</b>${PD_NO_AMOUNT_DEFAULT.has(i.name)?'':`<strong class="shopping-amount">${i.buyAmount===null?'Sjekk mengde':qtyText(i.buyAmount,i.unit)}</strong>`}<small>${esc([...i.meals].join(' · '))}</small>${i.availableAmount>0&&i.requiredAmount!==null?`<small>Planlagt: ${qtyText(i.requiredAmount,i.unit)} · hjemme: ${qtyText(i.availableAmount,i.stockUnit||i.unit)}</small>`:''}${i.reason==='unit-mismatch'?'<small>Mengden hjemme og oppskriften har ulike måleenheter.</small>':''}${i.reason==='recipe-quantity-unknown'?'<small>Sjekk mengden i originaloppskriften.</small>':''}${i.manual?(i.fromPlan?'<small>Noe er lagt til fra oppskriften</small>':'<small>Lagt til fra oppskriften</small>'):''}<span class="shopping-row-actions"><button class="text-button" data-shopping-other="${esc(i.key)}">Kjøpte en annen mengde<span class="sr-only">: ${esc(i.name)}</span></button><button class="text-button" data-shopping-home="${esc(i.key)}">Har allerede hjemme<span class="sr-only">: ${esc(i.name)}</span></button>${i.manual?`<button class="text-button" data-list-remove="${esc(i.key)}">${i.fromPlan?'Fjern det som er lagt til':'Fjern fra listen'}<span class="sr-only">: ${esc(i.name)}</span></button>`:''}</span></div></article>`).join('')}</div>${items.length>1?`<button class="secondary full buy-all" data-action="buy-all">${icon('check')} Kjøpte alt på listen</button>`:''}
+ <div class="shopping-pending">${items.map(i=>`<article class="shopping-item shopping-row"><label class="shopping-check"><input type="checkbox" data-shopping-check="${esc(i.key)}" aria-label="Kjøpt ${esc(i.name)}"><span>Kjøpt</span></label><div class="shopping-info"><b>${esc(pretty(i.name))}</b>${PD_NO_AMOUNT_DEFAULT.has(i.name)?'':`<strong class="shopping-amount">${i.buyAmount===null?(i.reason==='stock-quantity-unknown'?'Sjekk om du har nok hjemme':'Sjekk mengde'):qtyText(i.buyAmount,i.unit)}</strong>`}<small>${esc([...i.meals].join(' · '))}</small>${i.availableAmount>0&&i.requiredAmount!==null?`<small>Planlagt: ${qtyText(i.requiredAmount,i.unit)} · hjemme: ${qtyText(i.availableAmount,i.stockUnit||i.unit)}</small>`:''}${i.reason==='unit-mismatch'?'<small>Mengden hjemme og oppskriften har ulike måleenheter.</small>':''}${i.reason==='recipe-quantity-unknown'?'<small>Sjekk mengden i originaloppskriften.</small>':''}${i.manual?(i.fromPlan?'<small>Noe er lagt til fra oppskriften</small>':'<small>Lagt til fra oppskriften</small>'):''}<span class="shopping-row-actions"><button class="text-button" data-shopping-other="${esc(i.key)}">Kjøpte en annen mengde<span class="sr-only">: ${esc(i.name)}</span></button><button class="text-button" data-shopping-home="${esc(i.key)}">Har allerede hjemme<span class="sr-only">: ${esc(i.name)}</span></button>${i.manual?`<button class="text-button" data-list-remove="${esc(i.key)}">${i.fromPlan?'Fjern det som er lagt til':'Fjern fra listen'}<span class="sr-only">: ${esc(i.name)}</span></button>`:''}</span></div></article>`).join('')}</div>${items.length>1?`<button class="secondary full buy-all" data-action="buy-all">${icon('check')} Kjøpte alt på listen</button>`:''}
  <div class="shopping-bottom"><button class="secondary" data-action="download-list">Lagre som tekstfil</button></div>`:
  `<div class="empty shopping-empty">${icon('bag')}<h2>${report.mealCount||report.validLeftovers.length?'Alt til middagene er på kjøkkenet':'Velg en middag først'}</h2><p>${report.mealCount?'Ut fra mengdene du har registrert, har du nok til matplanen.':report.validLeftovers.length?'De planlagte måltidene bruker rester. Ingen nye råvarer er beregnet.':'Legg middager i matplanen, så samler vi det du trenger her.'}</p><button class="secondary" data-page="${report.mealCount?'pantry':'plan'}">${report.mealCount?'Se mitt kjøkken':'Åpne matplan'}</button></div>`}
- ${receipts.length?`<section class="shopping-receipts" aria-labelledby="receipts-title"><h2 id="receipts-title">Registrert på kjøkkenet</h2><p class="help-text">Siste registreringer. Hvis du fortsatt mangler noe, står det igjen på listen over.</p>${receipts.map(r=>`<article class="shopping-receipt ${r.amount===0?'stock-correction':''}">${icon(r.amount===0?'fridge':'check')}<div><b>${esc(pretty(r.name))}</b><p><span class="purchase-badge">${r.mode==='bought'?'Kjøpt':r.amount===0?'Har ikke hjemme':'Har hjemme'}</span> ${r.noAmount?'uten mengde':qtyText(r.amount,r.unit)+(r.mode==='home'?' totalt':'')}</p>${r.total!==null&&r.mode==='bought'?`<small>Totalen ble satt til ${qtyText(r.total,r.unit)}.</small>`:''}${r.date!==todayKey?`<small>${esc(longDate(fromKey(r.date)))}</small>`:''}</div>${canUndoShopping()&&state.shoppingUndo.id===r.id?`<button class="text-button" data-action="undo-shopping" aria-label="Angre registrering av ${esc(r.name)}">Angre</button>`:''}</article>`).join('')}</section>`:''}
+ ${receipts.length?`<section class="shopping-receipts" aria-labelledby="receipts-title"><h2 id="receipts-title">Registrert på kjøkkenet</h2><p class="help-text">Siste registreringer. Hvis du fortsatt mangler noe, står det igjen på listen over.</p>${receipts.map(r=>`<article class="shopping-receipt ${r.amount===0?'stock-correction':''}">${icon(r.amount===0?'fridge':'check')}<div><b>${esc(pretty(r.name))}</b><p><span class="purchase-badge">${r.mode==='bought'?'Kjøpt':r.amount===0?'Har ikke hjemme':'Har hjemme'}</span> ${r.noAmount?(r.unsure?'mengde ikke oppgitt':'uten mengde'):qtyText(r.amount,r.unit)+(r.mode==='home'?' totalt':'')}</p>${r.total!==null&&r.mode==='bought'?`<small>Totalen ble satt til ${qtyText(r.total,r.unit)}.</small>`:''}${r.date!==todayKey?`<small>${esc(longDate(fromKey(r.date)))}</small>`:''}</div>${canUndoShopping()&&state.shoppingUndo.id===r.id?`<button class="text-button" data-action="undo-shopping" ${state.shoppingUndo.entries?.length>1?`aria-label="Angre alle ${state.shoppingUndo.entries.length} registreringene">Angre alle`:`aria-label="Angre registrering av ${esc(r.name)}">Angre`}</button>`:''}</article>`).join('')}</section>`:''}
  <p class="help-text quantity-note">Mengdene i oppskriftene er eksempler. Sjekk originaloppskriftene før du handler.</p><div class="offline-note">${icon('check')} ${storageOK?'Valgene lagres i denne nettleseren. ':''}Listen kan brukes uten nett mens siden er åpen.</div></section>`;
 }
 function showShoppingEntry(key,mode='bought'){
@@ -540,8 +540,8 @@ function openShoppingEntry(){
  const d=shoppingDraft;if(!d)return;const stock=stockFor(d.name),present=available(d.name),item=shoppingItems().find(i=>i.key===d.key),needsTotal=shoppingNeedsTotal();
  openDialog('Oppdater fra handlelisten',`<h2 id="dialog-title">${esc(pretty(d.name))}</h2><div class="purchase-mode" role="group" aria-label="Hva vil du registrere?"><button class="${d.mode==='bought'?'active':''}" data-shopping-mode="bought" aria-pressed="${d.mode==='bought'}">Kjøpt nå</button><button class="${d.mode==='home'?'active':''}" data-shopping-mode="home" aria-pressed="${d.mode==='home'}">Har allerede hjemme</button></div>
  <p class="help-text purchase-context">${present?`Registrert hjemme: ${qtyText(stock.amount,stock.unit)}.`:'Ikke registrert på kjøkkenet ennå.'}${item?.buyAmount!==null&&item?.buyAmount!==undefined?` Mangler til matplanen: ${qtyText(item.buyAmount,item.unit)}.`:''}</p>
- <form id="shopping-stock-form"><div class="field-grid"><label for="shopping-amount">${d.mode==='bought'?'Mengde du kjøpte':'Total mengde hjemme'}<input id="shopping-amount" class="input" name="amount" type="number" inputmode="decimal" min="0" max="100000" step="any" placeholder="Valgfritt" value="${d.amount??''}" aria-describedby="shopping-amount-help"></label><label for="shopping-unit">Enhet<select id="shopping-unit" class="input" name="unit" ${d.unitChanged?'data-unit-changed="true"':''}>${unitOptions(d.unit)}</select></label></div>
- <p id="shopping-amount-help" class="help-text">${d.mode==='bought'?'Skriv mengden du faktisk kjøpte, for eksempel hele pakken. Den legges til det du har fra før.':'Skriv inn alt du har hjemme av denne varen. Dette erstatter mengden som var registrert.'}</p><p class="help-text">Mengde er valgfritt. Står feltet tomt, lagres varen uten mengde.</p>
+ <form id="shopping-stock-form"><div class="field-grid"><label for="shopping-amount">${d.mode==='bought'?'Mengde du kjøpte':'Total mengde hjemme'}<input id="shopping-amount" class="input" name="amount" type="number" inputmode="decimal" min="0" max="100000" step="any" placeholder="${PD_NO_AMOUNT_DEFAULT.has(d.name)||d.mode==='home'?'Valgfritt':'Skriv mengde'}" value="${d.amount??''}" aria-describedby="shopping-amount-help"></label><label for="shopping-unit">Enhet<select id="shopping-unit" class="input" name="unit" ${d.unitChanged?'data-unit-changed="true"':''}>${unitOptions(d.unit)}</select></label></div>
+ <p id="shopping-amount-help" class="help-text">${d.mode==='bought'?'Skriv mengden du faktisk kjøpte, for eksempel hele pakken. Den legges til det du har fra før.':'Skriv inn alt du har hjemme av denne varen. Dette erstatter mengden som var registrert.'}</p>${PD_NO_AMOUNT_DEFAULT.has(d.name)?'<p class="help-text">Mengde er valgfritt. Står feltet tomt, lagres varen uten mengde.</p>':d.mode==='home'?'<p class="help-text">Står feltet tomt, blir varen stående på listen som «Sjekk om du har nok hjemme».</p>':''}
  ${needsTotal?`<div class="purchase-total"><p class="help-text">${Number.isFinite(stock.amount)?'Vi kan ikke legge sammen disse måleenhetene.':'Vi vet ikke hvor mye du hadde fra før.'} Oppgi også totalen etter kjøpet, målt i ${esc(d.unit)}.</p><label for="shopping-total">Total mengde hjemme nå (${esc(d.unit)})<input id="shopping-total" class="input" name="total" type="number" inputmode="decimal" min="0" max="100000" step="any" value="${d.total??''}" placeholder="Inkludert det du nettopp kjøpte"></label></div>`:''}
  <p class="form-error" id="shopping-error" role="alert"></p><div class="detail-actions"><button type="button" class="secondary" data-action="close-dialog">Avbryt</button><button class="primary" type="submit">Lagre og oppdater kjøkkenet</button></div></form>`);
  document.getElementById('shopping-amount').focus({preventScroll:true});
@@ -557,12 +557,15 @@ function saveShoppingEntry(form,data){
  const fail=message=>{document.getElementById('shopping-error').textContent=message};
  if(raw.trim()===''){
   if(!ALL_UNITS.includes(unit)){fail('Skriv inn en gyldig mengde og velg enhet.');return}
+  // B-045: bare basisvarer blir «uten mengde». Kjøpt uten mengde for andre varer gjettes ikke (M6, M7 – kjøpt legger til).
+  const basis=PD_NO_AMOUNT_DEFAULT.has(d.name);
+  if(!basis&&d.mode==='bought'){fail('Skriv hvor mye du kjøpte. Eller lukk vinduet og trykk på ruten for å bruke mengden på listen.');return}
   const present0=available(d.name),stock0=stockFor(d.name);
   if(!present0&&state.pantry.length>=150){fail('Kjøkkenet er fullt i denne demoen. Fjern en råvare før du legger til flere.');return}
   const before0={present:present0,stock:Object.hasOwn(state.stock,d.name)?{...state.stock[d.name]}:null};
-  state.stock[d.name]={...stock0,amount:null,unit,noAmount:true,unitExplicit:true,unitChosenByUser:stock0.unitChosenByUser===true||chosenUnit(form,'unit',stock0)};
+  state.stock[d.name]={...stock0,amount:null,unit,noAmount:basis,unitExplicit:true,unitChosenByUser:stock0.unitChosenByUser===true||chosenUnit(form,'unit',stock0)};
   state.pantry=state.pantry.filter(n=>n!==d.name);state.pantry.push(d.name);
-  state.shoppingLog.push({id:d.id,name:d.name,mode:d.mode,amount:null,unit,total:null,noAmount:true,date:todayKey});state.shoppingLog=state.shoppingLog.slice(-50);
+  state.shoppingLog.push({id:d.id,name:d.name,mode:d.mode,amount:null,unit,total:null,noAmount:true,unsure:!basis,date:todayKey});state.shoppingLog=state.shoppingLog.slice(-50);
   state.shoppingUndo={id:d.id,name:d.name,before:before0,stamp:kitchenStamp()};state.checked=state.checked.filter(key=>key!==d.key);state.onboarded=true;undoKitchen=null;shoppingDraft=null;
   save();closeDialog();render();toast(`${pretty(d.name)} er lagret. Mitt kjøkken er oppdatert.`);return
  }
@@ -582,19 +585,23 @@ function saveShoppingEntry(form,data){
 }
 function pdQuickBuy(keys){
  const items=shoppingItems().filter(i=>keys.includes(i.key)),entries=[];
+ // B-045/M6: vet vi ikke hvor mye som trengs, spør vi i stedet for å gjette. Basisvarer (krydder, urter, olje) blir «uten mengde».
+ const unsure=i=>!PD_NO_AMOUNT_DEFAULT.has(i.name)&&!Number.isFinite(i.buyAmount);
+ if(items.length===1&&unsure(items[0])){render();showShoppingEntry(items[0].key,'bought');return}
  for(const item of items){
-  const name=item.name,present=available(name),stock=stockFor(name);
+  if(unsure(item))continue;
+  const name=item.name,basis=PD_NO_AMOUNT_DEFAULT.has(name),present=available(name),stock=stockFor(name);
   if(!present&&state.pantry.length>=150){toast('Kjøkkenet er fullt i denne demoen. Fjern en råvare før du legger til flere.');break}
   const before={present,stock:Object.hasOwn(state.stock,name)?{...state.stock[name]}:null};
   let after;
-  if(!Number.isFinite(item.buyAmount))after={...stock,amount:null,noAmount:true};
+  if(basis)after={...stock,amount:null,noAmount:true};
   else if(!present)after={...stock,amount:item.buyAmount,unit:item.unit,noAmount:false};
-  else{after=addStockAmount(stock,{amount:item.buyAmount,unit:item.unit},true);after.noAmount=after.amount===null}
+  else{after=addStockAmount(stock,{amount:item.buyAmount,unit:item.unit},true);after.noAmount=false}
   after.unitExplicit=true;state.stock[name]=after;state.pantry=state.pantry.filter(n=>n!==name);state.pantry.push(name);
   const id=crypto.randomUUID();state.shoppingLog.push({id,name,mode:'bought',amount:after.noAmount?null:item.buyAmount,unit:item.unit,total:null,noAmount:after.noAmount===true,date:todayKey});
-  state.checked=state.checked.filter(k=>k!==item.key);entries.push({id,name,before});
+  state.checked=state.checked.filter(k=>k!==item.key);entries.push({id,name,key:item.key,before});
  }
- if(!entries.length){render();return}
+ if(!entries.length){render();if(items.length)toast('Skriv inn mengden for varene som står igjen.');return}
  state.shoppingLog=state.shoppingLog.slice(-50);const last=entries[entries.length-1];
  state.shoppingUndo={id:last.id,name:last.name,before:last.before,entries,stamp:kitchenStamp()};state.onboarded=true;undoKitchen=null;
  save();render();toast(entries.length===1?`${pretty(last.name)} er lagt i Mitt kjøkken.`:`${entries.length} varer er lagt i Mitt kjøkken.`);
@@ -712,11 +719,11 @@ function changeWeek(delta){weekOffset+=delta;const dates=weekDates();selectedDat
 function confirmPlacement(key,id){if(metaFor(key).cooked)return;if(dependentDays(key).length){pendingPlace={key,id,servings:detailServings,extra:draftExtra};openDialog('Bytt middag',`<h2 id="dialog-title">Bytte denne middagen?</h2><p class="dialog-description">Restemåltider som bruker denne middagen blir også fjernet. Handlelisten oppdateres.</p><div class="detail-actions"><button class="secondary" data-action="close-dialog">Avbryt</button><button class="primary" data-action="confirm-place">Bytt middag</button></div>`)}else{placeMeal(key,id,detailServings,draftExtra);closeDialog();render();toast('Middagen er lagt i matplanen. Handlelisten er oppdatert.')}}
 document.addEventListener('submit',e=>{const form=e.target,data=new FormData(form);e.preventDefault();
  if(form.id==='shopping-stock-form'){saveShoppingEntry(form,data);return}
- if(form.matches('[data-recipe-stock-form]')){const name=canonical(form.dataset.ingredient),recipeId=form.dataset.recipeId,original=form.dataset.stockOriginal,dialog=document.getElementById('dialog'),position=dialog.scrollTop,stock=stockFor(name);undoKitchen=null;state.checked=[];if(data.has('present')){/* «Uten mengde» beholdes ved tom mengde (B-035), se pdRecipeStockEntry. */if(!available(name))state.pantry.push(name);state.stock[name]=pdRecipeStockEntry(stock,data,chosenUnit(form,'unit',stock))}else{state.pantry=state.pantry.filter(i=>i!==name);delete state.stock[name]}state.onboarded=true;save();/* Lukk ingrediensen etter lagring; + åpner den igjen (B-035). */const ckey=recipeId+'|'+original;pdCollapsed.add(ckey);render();showRecipe(recipeId,true);dialog.scrollTop=position;document.querySelector(`#dialog [data-open-ingredient="${CSS.escape(ckey)}"]`)?.focus({preventScroll:true});toast(data.has('present')?'Lagret. Kjøkkenet og handlelisten er oppdatert.':'Fjernet fra kjøkkenet. Handlelisten er oppdatert.');return}
- if(form.id==='add-stock-form'){undoKitchen=null;state.checked=[];pantryDrafts.forEach(({name,stock},i)=>{if(!available(name))state.pantry.push(name);const value=data.get(`amount-${i}`);state.stock[name]={...stock,amount:data.has(`noAmount-${i}`)||value===''?null:Number(value),unit:data.get(`unit-${i}`),unitExplicit:true,unitChosenByUser:chosenUnit(form,`unit-${i}`,stock),noAmount:data.has(`noAmount-${i}`)||value==='',frozen:data.has(`frozen-${i}`)}});state.onboarded=true;save();closeDialog();render();document.getElementById('pantry-input')?.focus();toast(pantryDrafts.length===1?'Råvaren er lagret.':'Råvarene er lagret.');pantryDrafts=[];return}
+ if(form.matches('[data-recipe-stock-form]')){const name=canonical(form.dataset.ingredient),recipeId=form.dataset.recipeId,original=form.dataset.stockOriginal,dialog=document.getElementById('dialog'),position=dialog.scrollTop,stock=stockFor(name);undoKitchen=null;state.checked=[];if(data.has('present')){/* «Uten mengde» beholdes ved tom mengde (B-035), se pdRecipeStockEntry. */if(!available(name))state.pantry.push(name);state.stock[name]=pdRecipeStockEntry(stock,data,chosenUnit(form,'unit',stock),name)}else{state.pantry=state.pantry.filter(i=>i!==name);delete state.stock[name]}state.onboarded=true;save();/* Lukk ingrediensen etter lagring; + åpner den igjen (B-035). */const ckey=recipeId+'|'+original;pdCollapsed.add(ckey);render();showRecipe(recipeId,true);dialog.scrollTop=position;document.querySelector(`#dialog [data-open-ingredient="${CSS.escape(ckey)}"]`)?.focus({preventScroll:true});toast(data.has('present')?'Lagret. Kjøkkenet og handlelisten er oppdatert.':'Fjernet fra kjøkkenet. Handlelisten er oppdatert.');return}
+ if(form.id==='add-stock-form'){undoKitchen=null;state.checked=[];pantryDrafts.forEach(({name,stock},i)=>{if(!available(name))state.pantry.push(name);const value=data.get(`amount-${i}`);state.stock[name]={...stock,amount:data.has(`noAmount-${i}`)||value===''?null:Number(value),unit:data.get(`unit-${i}`),unitExplicit:true,unitChosenByUser:chosenUnit(form,`unit-${i}`,stock),noAmount:data.has(`noAmount-${i}`)||(value===''&&PD_NO_AMOUNT_DEFAULT.has(name)),frozen:data.has(`frozen-${i}`)}});state.onboarded=true;save();closeDialog();render();document.getElementById('pantry-input')?.focus();toast(pantryDrafts.length===1?'Råvaren er lagret.':'Råvarene er lagret.');pantryDrafts=[];return}
  if(form.id==='pantry-form')addPantry(data.get('ingredient')||'');
  if(form.id==='online-form'){const query=String(data.get('query')||'').trim();if(query)onlineSearch(query)}
- if(form.id==='stock-form'){state.checked=[];const name=canonical(data.get('ingredient')),raw=data.get('amount');state.stock[name]={...state.stock[name],amount:data.has('noAmount')||raw===''?null:Number(raw),unit:data.get('unit'),unitExplicit:true,unitChosenByUser:chosenUnit(form,'unit',stockFor(name)),useFirst:data.has('useFirst'),noAmount:data.has('noAmount')||raw==='',frozen:data.has('frozen')};state.onboarded=true;undoKitchen=null;save();closeDialog();render();toast('Råvaren er oppdatert.')}
+ if(form.id==='stock-form'){state.checked=[];const name=canonical(data.get('ingredient')),raw=data.get('amount');state.stock[name]={...state.stock[name],amount:data.has('noAmount')||raw===''?null:Number(raw),unit:data.get('unit'),unitExplicit:true,unitChosenByUser:chosenUnit(form,'unit',stockFor(name)),useFirst:data.has('useFirst'),noAmount:data.has('noAmount')||(raw===''&&PD_NO_AMOUNT_DEFAULT.has(name)),frozen:data.has('frozen')};state.onboarded=true;undoKitchen=null;save();closeDialog();render();toast('Råvaren er oppdatert.')}
  if(form.id==='settings-form'){state.household=Number(data.get('household'));state.preferences={vegetarian:data.has('vegetarian'),maxMinutes:Number(data.get('maxMinutes')),avoid:String(data.get('avoid')||'').split(',').map(canonical).filter(Boolean)};save();navigate(settingsReturn);toast('Valgene er lagret. Middager som allerede er planlagt beholder porsjonene sine.')}
  if(form.id==='day-options-form'){undoKitchen=null;state.checked=[];const key=data.get('date'),old=state.planMeta[key],m=metaFor(key);state.planMeta[key]={...m,servings:Number(data.get('servings')),extra:m.leftoverFrom?0:Number(data.get('extra'))};const bad=validateLeftoverPlan().invalid;if(bad.has(key)||dependentDays(key).some(d=>bad.has(d))){state.planMeta[key]=old;document.getElementById('day-error').textContent='Det er ikke nok ekstra porsjoner til de planlagte restemåltidene. Endre eller fjern et restemåltid først.';return}save();closeDialog();render();toast('Porsjonene og handlelisten er oppdatert.')}
  if(form.id==='cook-form')saveCooked(data);
@@ -1192,6 +1199,12 @@ Ingredienser|||Ingredients
 Ingredienser og det du har hjemme|||Ingredients and what you have at home
 Ferdig|||Done
 Del liste|||Share list
+Sjekk om du har nok hjemme|||Check whether you have enough at home
+Skriv hvor mye du kjøpte. Eller lukk vinduet og trykk på ruten for å bruke mengden på listen.|||Enter how much you bought. Or close this window and tap the box to use the amount on the list.
+Står feltet tomt, blir varen stående på listen som «Sjekk om du har nok hjemme».|||If you leave it blank, the item stays on the list as “Check whether you have enough at home”.
+Skriv inn mengden for varene som står igjen.|||Enter the amount for the items that are left.
+mengde ikke oppgitt|||amount not given
+Angre alle|||Undo all
 Kjøpt|||Bought
 Sjekk mengde|||Check amount
 Mengden hjemme og oppskriften har ulike måleenheter.|||Your stock and the recipe use different units.
@@ -1778,6 +1791,16 @@ saveShoppingEntry=function(form,data){
  if(state.shoppingUndo?.id===d.id)state.shoppingUndo.extras=removed;
  save();render();
 };
+const pdListBaseQuickBuy=pdQuickBuy;
+pdQuickBuy=function(keys){
+ const last=state.shoppingUndo;pdListBaseQuickBuy(keys);
+ const undo=state.shoppingUndo;if(!undo||undo===last||!Array.isArray(undo.entries))return;
+ const bought=undo.entries.map(e=>e.key),report=computeShopping();
+ const removed=pdListExtras().filter(e=>pdListRows(e).some(q=>bought.includes(q.key))&&pdListCovered(e,report));
+ if(!removed.length)return;
+ state.listExtras=pdListExtras().filter(e=>!removed.includes(e));undo.extras=removed;
+ save();render();
+};
 const pdListBaseUndo=undoShoppingEntry;
 undoShoppingEntry=function(){
  const extras=canUndoShopping()?pdListValidate(state.shoppingUndo.extras):[];
@@ -1790,9 +1813,9 @@ undoShoppingEntry=function(){
 
 // Lagring av én ingrediens fra oppskriften. «Uten mengde» velges i Mitt kjøkken (B-035):
 // tom mengde beholder valget, et tall erstatter det. data: FormData fra skjemaet.
-function pdRecipeStockEntry(stock,data,unitChosen){
+function pdRecipeStockEntry(stock,data,unitChosen,name){
  const raw=data.get('amount'),keepNo=data.has('keepNoAmount')&&raw==='';
- return {...stock,amount:keepNo||raw===''?null:Number(raw),unit:data.get('unit'),unitExplicit:true,unitChosenByUser:unitChosen,noAmount:keepNo||raw===''};
+ return {...stock,amount:keepNo||raw===''?null:Number(raw),unit:data.get('unit'),unitExplicit:true,unitChosenByUser:unitChosen,noAmount:keepNo||(raw===''&&PD_NO_AMOUNT_DEFAULT.has(name))};
 }
 
 // --- Dropp denne -------------------------------------------------------------
